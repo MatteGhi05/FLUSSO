@@ -1,772 +1,155 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Lista della Spesa — Matteo</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #F7F5F0;
-    --surface: #FFFFFF;
-    --surface2: #F0EDE6;
-    --border: #E2DDD4;
-    --border2: #CCC8BE;
-    --text: #1A1814;
-    --text2: #6B6760;
-    --text3: #A09C96;
-    --green: #1D9E75;
-    --green-bg: #E1F5EE;
-    --green-text: #0F6E56;
-    --amber: #BA7517;
-    --amber-bg: #FAEEDA;
-    --red: #A32D2D;
-    --red-bg: #FCEBEB;
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding-bottom: 120px;
-  }
-
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 16px 0;
-    position: sticky; top: 0; z-index: 100;
-  }
-
-  .header-top {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
-  }
-
-  .header-title h1 { font-size: 19px; font-weight: 600; letter-spacing: -0.3px; }
-  .header-title p { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 2px; }
-
-  .spesa-btn {
-    background: var(--text); color: white; border: none;
-    border-radius: var(--radius-sm); padding: 9px 16px;
-    font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer;
-  }
-
-  .top-tabs {
-    display: flex; overflow-x: auto; scrollbar-width: none;
-    border-bottom: 1px solid var(--border);
-  }
-  .top-tabs::-webkit-scrollbar { display: none; }
-
-  .top-tab {
-    flex-shrink: 0;
-    padding: 10px 16px 12px; font-size: 13px; font-weight: 500;
-    cursor: pointer; border: none; background: none; color: var(--text3);
-    border-bottom: 2.5px solid transparent; transition: all 0.15s;
-    font-family: 'DM Sans', sans-serif; white-space: nowrap; margin-bottom: -1px;
-  }
-  .top-tab.active { color: var(--text); border-bottom-color: var(--text); }
-
-  .day-tabs { display: flex; padding-top: 2px; }
-  .tab {
-    flex: 1; padding: 8px 0 10px; font-size: 13px; font-weight: 500;
-    cursor: pointer; border: none; background: none; color: var(--text3);
-    border-bottom: 2px solid transparent; transition: all 0.15s;
-    font-family: 'DM Sans', sans-serif; text-align: center;
-  }
-  .tab.active { color: var(--text); border-bottom-color: var(--text); }
-  #day-selector { border-top: 1px solid var(--border); }
-
-  .container { padding: 14px 14px 0; max-width: 600px; margin: 0 auto; }
-
-  .progress-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .progress-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; background: var(--green); }
-  .progress-fill.amber { background: var(--amber); }
-  .progress-label { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text2); white-space: nowrap; }
-  .reset-link {
-    font-size: 12px; color: var(--text3); cursor: pointer;
-    text-decoration: underline; text-decoration-color: var(--border2);
-    white-space: nowrap; background: none; border: none; font-family: 'DM Sans', sans-serif;
-  }
-
-  .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
-  .section-header {
-    padding: 9px 14px 8px; background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text2); }
-  .section-count { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text3); }
-
-  .item-row {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 12px 14px; border-bottom: 1px solid var(--border);
-    cursor: pointer; transition: background 0.1s; user-select: none;
-  }
-  .item-row:last-child { border-bottom: none; }
-  .item-row:active { background: var(--surface2); }
-  .item-row.has-stock { opacity: 0.45; }
-
-  .check {
-    width: 22px; height: 22px; border-radius: 5px;
-    border: 1.5px solid var(--border2); flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; background: white; margin-top: 1px;
-  }
-  .check.done { background: var(--green); border-color: var(--green); }
-  .check.stock { background: var(--amber); border-color: var(--amber); }
-
-  .checkmark {
-    display: none; width: 5px; height: 9px;
-    border: 2px solid white; border-top: none; border-left: none;
-    transform: rotate(45deg) translateY(-1px);
-  }
-  .check.done .checkmark, .check.stock .checkmark { display: block; }
-
-  .item-content { flex: 1; min-width: 0; }
-  .item-name { font-size: 15px; color: var(--text); line-height: 1.35; transition: color 0.15s; }
-  .item-name.done { color: var(--text3); text-decoration: line-through; text-decoration-color: var(--border2); }
-  .item-alt { font-size: 12px; color: var(--text3); margin-top: 3px; font-style: italic; line-height: 1.3; }
-  .days-badge { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: 'DM Mono', monospace; }
-
-  .qty {
-    font-size: 12px; font-family: 'DM Mono', monospace;
-    color: var(--text2); white-space: nowrap;
-    background: var(--surface2); padding: 3px 8px;
-    border-radius: 4px; flex-shrink: 0; margin-top: 2px;
-  }
-  .qty.multi { background: var(--amber-bg); color: var(--amber); }
-
-  /* SCORTE */
-  .scorte-legend {
-    display: flex; gap: 10px; flex-wrap: wrap;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px;
-    font-size: 12px; color: var(--text2);
-  }
-  .legend-dot {
-    display: inline-block; width: 10px; height: 10px;
-    border-radius: 2px; margin-right: 5px; vertical-align: middle;
-  }
-  .dot-green { background: var(--green); }
-  .dot-amber { background: var(--amber); }
-
-  .scorte-actions {
-    display: flex; gap: 8px; margin-bottom: 12px;
-  }
-  .action-btn {
-    flex: 1; padding: 11px 10px; border-radius: var(--radius-sm);
-    font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
-    cursor: pointer; border: 1px solid var(--border); background: var(--surface);
-    color: var(--text2); transition: background 0.1s;
-  }
-  .action-btn.primary {
-    background: var(--text); color: white; border-color: var(--text);
-  }
-  .action-btn:active { opacity: 0.8; }
-
-  /* LISTA MANCANTI */
-  .mancanti-header {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
-  }
-  .mancanti-title { font-size: 16px; font-weight: 600; }
-  .mancanti-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
-  .back-btn {
-    padding: 8px 14px; border-radius: var(--radius-sm);
-    font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
-    cursor: pointer; border: 1px solid var(--border); background: var(--surface);
-    color: var(--text2);
-  }
-
-  .empty-state {
-    text-align: center; padding: 40px 20px;
-    color: var(--text3); font-size: 14px; line-height: 1.6;
-  }
-  .empty-state .big { font-size: 32px; margin-bottom: 10px; }
-
-  /* MODAL */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.4); z-index: 200;
-    align-items: flex-end; justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--surface); border-radius: 18px 18px 0 0;
-    width: 100%; max-width: 600px;
-    padding: 20px 18px 40px;
-    animation: slideUp 0.22s ease;
-    max-height: 85vh; overflow-y: auto;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(60px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 18px; }
-  .modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-  .modal > p { font-size: 13px; color: var(--text2); margin-bottom: 18px; }
-  .input-row { display: flex; gap: 10px; margin-bottom: 20px; }
-  .euro-input-wrap { flex: 1; position: relative; }
-  .euro-input-wrap span {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    font-size: 16px; color: var(--text2); font-family: 'DM Mono', monospace;
-  }
-  .euro-input {
-    width: 100%; padding: 13px 12px 13px 30px;
-    font-size: 22px; font-family: 'DM Mono', monospace; font-weight: 500;
-    border: 1.5px solid var(--border2); border-radius: var(--radius-sm);
-    background: var(--bg); color: var(--text); outline: none;
-  }
-  .euro-input:focus { border-color: var(--text); }
-  .save-btn {
-    background: var(--text); color: white; border: none;
-    border-radius: var(--radius-sm); padding: 13px 20px;
-    font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer;
-  }
-  .storico-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 10px; }
-  .storico-list { list-style: none; }
-  .storico-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 0; border-bottom: 1px solid var(--border);
-  }
-  .storico-item:last-child { border-bottom: none; }
-  .storico-meta { display: flex; flex-direction: column; gap: 2px; }
-  .storico-day { font-size: 14px; font-weight: 500; }
-  .storico-date { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text3); }
-  .storico-amount { font-size: 17px; font-family: 'DM Mono', monospace; font-weight: 500; color: var(--green-text); }
-  .storico-del { background: none; border: none; color: var(--text3); font-size: 22px; cursor: pointer; padding: 4px 8px; border-radius: 4px; line-height: 1; }
-  .totale-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 0 0; margin-top: 6px; border-top: 1px solid var(--border);
-  }
-  .totale-label { font-size: 14px; font-weight: 600; }
-  .totale-value { font-size: 22px; font-family: 'DM Mono', monospace; font-weight: 500; }
-  .empty-storico { font-size: 13px; color: var(--text3); text-align: center; padding: 18px 0; font-style: italic; }
-  .close-btn {
-    width: 100%; margin-top: 18px; padding: 14px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-size: 15px;
-    font-family: 'DM Sans', sans-serif; font-weight: 500; color: var(--text2); cursor: pointer;
-  }
-
-  .info-banner {
-    background: var(--amber-bg); border: 1px solid #FAC775;
-    border-radius: var(--radius); padding: 10px 14px; margin-bottom: 12px;
-    font-size: 12px; color: var(--amber); line-height: 1.4;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071c35" />
+  <meta name="description" content="Dashboard personale per spese, entrate e budget." />
+  <title>Flusso — Finanze personali</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23071c35'/%3E%3Cpath d='M16 39c8-18 18 9 32-15' fill='none' stroke='%2338bdf8' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='48' cy='24' r='5' fill='%23e0f2fe'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Flusso, pagina iniziale">
+        <span class="brand-mark"><span></span></span>
+        <span>flusso</span>
+      </a>
 
-<header>
-  <div class="header-top">
-    <div class="header-title">
-      <h1>🛒 Lista della Spesa</h1>
-      <p>Piano Matteo — 60gg</p>
-    </div>
-    <button class="spesa-btn" onclick="openModal()">💰 Spesa</button>
-  </div>
-  <div class="top-tabs">
-    <button class="top-tab active" onclick="setMode('giorno')">Giorno singolo</button>
-    <button class="top-tab" onclick="setMode('3giorni')">3 giorni</button>
-    <button class="top-tab" onclick="setMode('scorte')">📦 Scorte</button>
-  </div>
-  <div id="day-selector" class="day-tabs">
-    <button class="tab active" onclick="setDay('A')">Giorno A</button>
-    <button class="tab" onclick="setDay('B')">Giorno B</button>
-    <button class="tab" onclick="setDay('C')">Giorno C</button>
-  </div>
-</header>
+      <nav class="nav" aria-label="Navigazione principale">
+        <button class="nav-item active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/></svg>
+          <span>Panoramica</span>
+        </button>
+        <button class="nav-item" data-view="movements">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg>
+          <span>Movimenti</span>
+        </button>
+        <button class="nav-item" data-view="budget">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V9m5 9V5m6 13v-7m5 7V3"/></svg>
+          <span>Budget</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1A8 8 0 0 0 15 6l-.4-2.6h-4L10 6a8 8 0 0 0-1.5 1L6 6 4 9.4 6.1 11a7 7 0 0 0 0 2L4 14.6 6 18l2.5-1a8 8 0 0 0 1.5 1l.5 2.6h4L15 18a8 8 0 0 0 1.5-1l2.5 1 2-3.4-2.1-1.6a7 7 0 0 0 .1-1Z"/></svg>
+          <span>Impostazioni</span>
+        </button>
+      </nav>
 
-<div class="container" id="main-container"></div>
-
-<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <h2>Registra la spesa</h2>
-    <p>Inserisci quanto hai speso oggi</p>
-    <div class="input-row">
-      <div class="euro-input-wrap">
-        <span>€</span>
-        <input class="euro-input" type="number" id="spesa-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+      <div class="sidebar-bottom">
+        <div class="sync-card">
+          <span class="sync-icon">✓</span>
+          <div><strong>Salvataggio locale</strong><small>I dati restano su questo dispositivo</small></div>
+        </div>
+        <button class="profile-button" aria-label="Profilo e impostazioni">
+          <span class="avatar">IO</span><span><strong>Il mio spazio</strong><small>Uso personale</small></span>
+          <span class="more">•••</span>
+        </button>
       </div>
-      <button class="save-btn" onclick="saveSpesa()">Salva</button>
-    </div>
-    <div class="storico-title">Storico spese</div>
-    <ul class="storico-list" id="storico-list"></ul>
-    <div id="totale-wrap" class="totale-row" style="display:none">
-      <span class="totale-label">Totale speso</span>
-      <span class="totale-value" id="totale-value">€ 0.00</span>
-    </div>
-    <button class="close-btn" onclick="closeModal()">Chiudi</button>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="viewEyebrow">IL TUO MESE</p>
+          <h1 id="viewTitle">Panoramica</h1>
+        </div>
+        <div class="top-actions">
+          <label class="month-picker">
+            <span class="sr-only">Mese visualizzato</span>
+            <input type="month" id="monthPicker" value="2026-09" />
+          </label>
+          <button class="primary-button" id="openTransaction">
+            <span class="plus">+</span><span>Nuovo movimento</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="view active" id="dashboardView">
+        <div class="hero-grid">
+          <article class="balance-card">
+            <div class="card-topline"><span>Saldo disponibile</span><span class="trend-pill" id="balanceTrend">mese corrente</span></div>
+            <p class="balance-value" id="balanceValue">€ 0,00</p>
+            <div class="balance-meta"><span><i class="dot light"></i>Entrate <strong id="incomeValue">€ 0</strong></span><span><i class="dot"></i>Spese <strong id="expenseValue">€ 0</strong></span></div>
+            <div class="wave" aria-hidden="true"><svg viewBox="0 0 520 118" preserveAspectRatio="none"><defs><linearGradient id="waveFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8" stop-opacity=".45"/><stop offset="1" stop-color="#38bdf8" stop-opacity="0"/></linearGradient></defs><path d="M0 92 C55 70 92 85 140 61 S232 55 280 42 S370 58 420 28 S480 18 520 6 V118 H0Z" fill="url(#waveFill)"/><path d="M0 92 C55 70 92 85 140 61 S232 55 280 42 S370 58 420 28 S480 18 520 6" fill="none" stroke="#7dd3fc" stroke-width="3"/></svg></div>
+          </article>
+
+          <article class="score-card glass-card">
+            <div class="card-heading"><div><span class="section-kicker">RITMO DEL MESE</span><h2>Capacità di risparmio</h2></div><span class="info">i</span></div>
+            <div class="score-content">
+              <div class="score-ring" id="scoreRing"><div><strong id="savingRate">0%</strong><span>risparmiato</span></div></div>
+              <div class="score-copy"><p id="savingMessage">Imposta lo stipendio per iniziare.</p><div class="mini-stat"><span>Risparmio netto</span><strong id="savingValue">€ 0,00</strong></div></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-icon tone-1"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span><div><span>Entrate</span><strong id="incomeCard">€ 0,00</strong></div><button class="inline-edit" data-view-link="settings">Modifica stipendio</button></article>
+          <article class="stat-card"><span class="stat-icon tone-2"><svg viewBox="0 0 24 24"><path d="M19 12H5m5 5-5-5 5-5"/></svg></span><div><span>Spese</span><strong id="expenseCard">€ 0,00</strong></div><small id="expenseCount">0 operazioni</small></article>
+          <article class="stat-card"><span class="stat-icon tone-3"><svg viewBox="0 0 24 24"><path d="m5 15 4-4 3 3 7-8M15 6h4v4"/></svg></span><div><span>Budget libero</span><strong id="budgetLeft">€ 0,00</strong></div><small id="budgetRate">0% disponibile</small></article>
+        </div>
+
+        <div class="analytics-grid">
+          <article class="glass-card chart-card">
+            <div class="card-heading"><div><span class="section-kicker">ULTIMI 6 MESI</span><h2>Andamento finanziario</h2></div><div class="legend"><span><i class="legend-line light"></i>Entrate</span><span><i class="legend-line"></i>Spese</span></div></div>
+            <div class="line-chart" id="lineChart" role="img" aria-label="Andamento di entrate e spese negli ultimi sei mesi"></div>
+          </article>
+          <article class="glass-card category-card">
+            <div class="card-heading"><div><span class="section-kicker">DOVE VANNO I SOLDI</span><h2>Categorie principali</h2></div><button class="text-button" data-view-link="budget">Vedi budget</button></div>
+            <div class="category-visual"><div class="donut" id="donut"><div><strong id="donutTotal">€ 0</strong><span>spese</span></div></div><div class="category-list" id="categoryList"></div></div>
+          </article>
+        </div>
+
+        <article class="glass-card recent-card">
+          <div class="card-heading"><div><span class="section-kicker">ATTIVITÀ RECENTE</span><h2>Ultimi movimenti</h2></div><button class="text-button" data-view-link="movements">Mostra tutti</button></div>
+          <div class="transaction-list" id="recentTransactions"></div>
+        </article>
+      </section>
+
+      <section class="view" id="movementsView">
+        <div class="section-toolbar"><div><span class="section-kicker">REGISTRO</span><h2>Tutti i movimenti</h2></div><div class="filter-pills"><button class="filter active" data-filter="all">Tutti</button><button class="filter" data-filter="expense">Spese</button><button class="filter" data-filter="income">Entrate</button></div></div>
+        <div class="glass-card table-card"><div class="transaction-list expanded" id="allTransactions"></div><div class="empty-state" id="emptyTransactions"><span>◎</span><h3>Nessun movimento</h3><p>Aggiungi la prima entrata o spesa del mese.</p></div></div>
+      </section>
+
+      <section class="view" id="budgetView">
+        <div class="budget-hero"><div><span class="section-kicker">PIANO MENSILE</span><h2>Il tuo budget</h2><p>Assegna un limite alle categorie per <strong id="budgetMonthLabel"></strong>.</p></div><div class="budget-total"><span>Budget totale</span><strong id="budgetTotal">€ 0</strong></div></div>
+        <div class="budget-grid" id="budgetGrid"></div>
+      </section>
+
+      <section class="view" id="settingsView">
+        <div class="settings-heading"><div><span class="section-kicker">VALORI DEL MESE</span><h2>Impostazioni mensili</h2><p>Questi valori valgono solo per <strong id="settingsMonthLabel"></strong>.</p></div><button class="secondary-button" id="copyPrevious">Copia dal mese precedente</button></div>
+        <div class="settings-grid">
+          <article class="setting-card featured-setting"><span class="setting-icon">€</span><div class="setting-copy"><span>Stipendio mensile</span><p>Viene aggiunto automaticamente alle entrate del mese.</p></div><label class="setting-input"><span>Importo</span><div><b>€</b><input type="number" id="salaryInput" min="0" step="10" /></div></label></article>
+          <article class="setting-card"><span class="setting-icon">◎</span><div class="setting-copy"><span>Saldo iniziale</span><p>Disponibilità presente all’inizio del mese selezionato.</p></div><label class="setting-input"><span>Importo</span><div><b>€</b><input type="number" id="openingBalanceInput" step="10" /></div></label></article>
+          <article class="setting-card"><span class="setting-icon">▥</span><div class="setting-copy"><span>Budget del mese</span><p>È la somma dei limiti impostati nelle singole categorie.</p></div><div class="setting-total"><span>Totale attuale</span><strong id="settingsBudgetTotal">€ 0</strong><button class="text-button" data-view-link="budget">Modifica categorie</button></div></article>
+        </div>
+        <div class="settings-note"><span>✓</span><div><strong>Salvataggio automatico</strong><p>Ogni modifica aggiorna immediatamente dashboard, grafici e budget.</p></div></div>
+        <div class="backup-panel">
+          <div class="backup-copy"><span class="setting-icon">⇩</span><div><strong>Backup dei tuoi dati</strong><p>Scarica un unico file con movimenti, stipendio e budget. Potrai ricaricarlo su qualsiasi dispositivo.</p></div></div>
+          <div class="backup-actions"><button class="secondary-button" id="importBackup" type="button">Carica backup</button><button class="primary-button backup-download" id="exportBackup" type="button"><span>Scarica backup</span></button></div>
+          <input type="file" id="backupFile" accept="application/json,.json" hidden />
+        </div>
+      </section>
+    </main>
   </div>
-</div>
 
-<script>
-// ─── DATI ────────────────────────────────────────────────────────────────────
-const days = {
-  A: [
-    { title: "Colazione", items: [
-      { name: "Yogurt greco 0%",                qty: 150, unit: "g",     groupKey: "yogurt_greco" },
-      { name: "Bevanda alla mandorla (Alpro)",   qty: 0,   unit: "qb",    groupKey: "mandorla" },
-      { name: "Banana",                          qty: 120, unit: "g",     groupKey: "banana", alt: "oppure pera o mela" },
-      { name: "Fiocchi d'avena (Quaker)",        qty: 70,  unit: "g",     groupKey: "avena" },
-      { name: "Supradyn effervescente",          qty: 1,   unit: "cpr",   groupKey: "supradyn" },
-    ]},
-    { title: "Spuntino", items: [
-      { name: "Pane senza crosta (Panpiuma)",    qty: 2,   unit: "fette", groupKey: "pane_panpiuma" },
-      { name: "Bresaola",                        qty: 50,  unit: "g",     groupKey: "bresaola", alt: "oppure carne salada" },
-    ]},
-    { title: "Pranzo", items: [
-      { name: "Gnocchi di patate",               qty: 450, unit: "g",     groupKey: "gnocchi", alt: "oppure spatzle verdi 400 g" },
-      { name: "Philadelphia alla greca",         qty: 87,  unit: "g",     groupKey: "philadelphia", alt: "oppure ricottina light 90 g" },
-      { name: "Tonno all'olio evo sgocciolato",  qty: 78,  unit: "g",     groupKey: "tonno", alt: "alterna con piselli precotti 160 g" },
-      { name: "Olio evo",                        qty: 10,  unit: "ml",    groupKey: "olio_evo" },
-    ]},
-    { title: "Merenda", items: [
-      { name: "Frutto medio",                    qty: 1,   unit: "pz",    groupKey: "frutto", alt: "mela, arancia o pesca" },
-      { name: "Biscotti Plasmon",                qty: 40,  unit: "g",     groupKey: "biscotti", alt: "oppure Orosaiwa" },
-    ]},
-    { title: "Cena", items: [
-      { name: "Hamburger pollo/tacchino (macelleria)", qty: 300, unit: "g", groupKey: "carne_pollo", alt: "oppure spinacine Fileni 200 g, oppure sovracoscia pollo 250 g" },
-      { name: "Verdure cotte",                   qty: 150, unit: "g",     groupKey: "verdure_cotte", alt: "es. carote" },
-      { name: "Pane fresco integrale",           qty: 120, unit: "g",     groupKey: "pane_integrale", alt: "oppure piadina integrale 100 g" },
-      { name: "Olio evo",                        qty: 10,  unit: "ml",    groupKey: "olio_evo" },
-    ]},
-  ],
-  B: [
-    { title: "Colazione", items: [
-      { name: "Albume pastorizzato",             qty: 250, unit: "ml",    groupKey: "albume", alt: "anche per pancake" },
-      { name: "Crema proteica (Gonuts)",         qty: 30,  unit: "g",     groupKey: "crema_proteica" },
-      { name: "Banana",                          qty: 120, unit: "g",     groupKey: "banana", alt: "oppure marmellata senza zuccheri (Rigoni)" },
-    ]},
-    { title: "Spuntino", items: [
-      { name: "Cracker Fior d'acqua (Mulino B.)", qty: 50, unit: "g",    groupKey: "cracker" },
-      { name: "Spremuta",                        qty: 350, unit: "ml",    groupKey: "spremuta", alt: "oppure succo frutta s.z.a. 300 ml" },
-    ]},
-    { title: "Pranzo", items: [
-      { name: "Riso / orzo / farro",             qty: 160, unit: "g",     groupKey: "cereali" },
-      { name: "Carote",                          qty: 150, unit: "g",     groupKey: "carote" },
-      { name: "Feta greca",                      qty: 50,  unit: "g",     groupKey: "feta", alt: "oppure mozzarella proteica Granarolo + prosciutto cotto 100 g" },
-      { name: "Olio evo",                        qty: 10,  unit: "ml",    groupKey: "olio_evo" },
-    ]},
-    { title: "Merenda", items: [
-      { name: "Paninetti al latte (Nuvolatte)",  qty: 2,   unit: "pz",    groupKey: "paninetti", alt: "oppure crostatine alla frutta Mulino B." },
-    ]},
-    { title: "Cena", items: [
-      { name: "Salmone / trota / tonno freschi", qty: 150, unit: "g",     groupKey: "pesce_fresco", alt: "oppure bastoncini merluzzo Findus 125 g, oppure polpo/totani/seppie 250 g" },
-      { name: "Patate lesse o al forno",         qty: 400, unit: "g",     groupKey: "patate", alt: "oppure polenta pronta 500 g" },
-      { name: "Verdure cotte",                   qty: 150, unit: "g",     groupKey: "verdure_cotte", alt: "es. carote" },
-      { name: "Maionese allo yogurt (Mayò-Calvè)", qty: 45, unit: "g",   groupKey: "maionese", alt: "oppure 2 sottilette light Kraft" },
-      { name: "Olio evo",                        qty: 10,  unit: "ml",    groupKey: "olio_evo" },
-    ]},
-  ],
-  C: [
-    { title: "Colazione", items: [
-      { name: "Yogurt greco magro (Fruyo)",      qty: 150, unit: "g",     groupKey: "yogurt_greco", alt: "oppure dessert proteico Milbona/Granarolo 200 g" },
-      { name: "Uova medie intere",               qty: 3,   unit: "pz",    groupKey: "uova" },
-      { name: "Pane di segale (Dailybread)",     qty: 110, unit: "g",     groupKey: "pane_segale" },
-      { name: "Spremuta",                        qty: 300, unit: "ml",    groupKey: "spremuta", alt: "oppure succo frutta s.z.a. 250 ml" },
-    ]},
-    { title: "Spuntino", items: [
-      { name: "Yogurt greco magro (Fruyo)",      qty: 150, unit: "g",     groupKey: "yogurt_greco" },
-      { name: "Frutta disidratata al naturale",  qty: 50,  unit: "g",     groupKey: "frutta_disidratata", alt: "albicocche, datteri o prugne" },
-    ]},
-    { title: "Pranzo", items: [
-      { name: "Pasta integrale",                 qty: 150, unit: "g",     groupKey: "pasta_integrale", alt: "oppure pasta fresca senza uovo 220 g" },
-      { name: "Carote Cotte",                          qty: 150, unit: "g",     groupKey: "verdure_cotte" },
-      { name: "Petto di pollo",                  qty: 150, unit: "g",     groupKey: "carne_pollo", alt: "oppure macinato magro di pollo" },
-      { name: "Olive taggiasche denocciolate",   qty: 25,  unit: "g",     groupKey: "olive", alt: "oppure olio evo 5 ml" },
-      { name: "Olio evo",                        qty: 5,   unit: "ml",    groupKey: "olio_evo" },
-    ]},
-    { title: "Merenda", items: [
-      { name: "Pane senza crosta (Panpiuma)",    qty: 2,   unit: "fette", groupKey: "pane_panpiuma" },
-      { name: "Miele di fiori",                  qty: 30,  unit: "ml",    groupKey: "miele", alt: "oppure taralli all'olio evo 75 g" },
-    ]},
-    { title: "Cena", items: [
-      { name: "Fettina magra di vitello",        qty: 250, unit: "g",     groupKey: "carne_vitello", alt: "oppure lonza maiale 200 g, fegato vitello 200 g" },
-      { name: "Carote Cotte",                   qty: 250, unit: "g",     groupKey: "verdure_cotte", alt: "anche vellutata o passata" },
-      { name: "Crostini integrali (Granetti)",   qty: 80,  unit: "g",     groupKey: "crostini", alt: "oppure taralli all'olio evo 75 g" },
-      { name: "Olio evo",                        qty: 10,  unit: "ml",    groupKey: "olio_evo" },
-    ]},
-  ],
-};
+  <div class="modal-backdrop" id="transactionModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header"><div><span class="section-kicker">NUOVA REGISTRAZIONE</span><h2 id="modalTitle">Aggiungi movimento</h2></div><button class="icon-button" id="closeModal" aria-label="Chiudi">×</button></div>
+      <form id="transactionForm">
+        <div class="type-switch" role="group" aria-label="Tipo di movimento"><button type="button" class="active" data-type="expense">Spesa</button><button type="button" data-type="income">Entrata</button></div>
+        <label class="amount-field"><span>Importo</span><div><span>€</span><input type="number" id="amount" min="0.01" step="0.01" placeholder="0,00" required /></div></label>
+        <div class="form-grid">
+          <label><span>Categoria</span><select id="category" required></select></label>
+          <label><span>Data</span><input type="date" id="date" required /></label>
+        </div>
+        <label><span>Descrizione</span><input type="text" id="description" maxlength="60" placeholder="Es. Spesa settimanale" required /></label>
+        <button class="submit-button" type="submit">Salva movimento</button>
+      </form>
+    </div>
+  </div>
 
-// Tutte le categorie di scorte (elenco master di tutti i prodotti unici del piano)
-const SCORTE_CATS = [
-  { title: "🥩 Carne e affettati", keys: [
-    { key: "carne_pollo",   name: "Pollo (hamburger / petto / macinato / sovracoscia)" },
-    { key: "carne_vitello", name: "Vitello (fettina / fegato)" },
-    { key: "bresaola",      name: "Bresaola / carne salada" },
-  ]},
-  { title: "🐟 Pesce", keys: [
-    { key: "pesce_fresco",  name: "Salmone / trota / tonno freschi" },
-    { key: "tonno",         name: "Tonno all'olio evo (scatoletta)" },
-  ]},
-  { title: "🥛 Latticini e uova", keys: [
-    { key: "yogurt_greco",  name: "Yogurt greco magro (Fruyo)" },
-    { key: "albume",        name: "Albume pastorizzato" },
-    { key: "uova",          name: "Uova medie intere" },
-    { key: "feta",          name: "Feta greca" },
-    { key: "philadelphia",  name: "Philadelphia alla greca" },
-    { key: "maionese",      name: "Maionese allo yogurt (Mayò-Calvè)" },
-  ]},
-  { title: "🥦 Verdura e frutta fresca", keys: [
-    { key: "verdure_cotte", name: "Verdure cotte (carote, zucchine, ecc.)" },
-    { key: "carote",        name: "Carote crude" },
-    { key: "banana",        name: "Banana / pera / mela" },
-    { key: "frutto",        name: "Frutto medio (mela, arancia, pesca)" },
-  ]},
-  { title: "🍞 Pane e carboidrati", keys: [
-    { key: "gnocchi",           name: "Gnocchi di patate" },
-    { key: "pasta_integrale",   name: "Pasta integrale / pasta fresca" },
-    { key: "cereali",           name: "Riso / orzo / farro" },
-    { key: "pane_panpiuma",     name: "Pane senza crosta (Panpiuma)" },
-    { key: "pane_integrale",    name: "Pane fresco integrale / piadina" },
-    { key: "pane_segale",       name: "Pane di segale fette (Dailybread)" },
-    { key: "avena",             name: "Fiocchi d'avena (Quaker)" },
-    { key: "patate",            name: "Patate" },
-    { key: "cracker",           name: "Cracker Fior d'acqua (Mulino B.)" },
-    { key: "crostini",          name: "Crostini integrali (Granetti)" },
-    { key: "biscotti",          name: "Biscotti Plasmon / Orosaiwa" },
-    { key: "paninetti",         name: "Paninetti al latte (Nuvolatte)" },
-  ]},
-  { title: "🫙 Condimenti e salse", keys: [
-    { key: "olio_evo",          name: "Olio extravergine di oliva" },
-    { key: "olive",             name: "Olive taggiasche denocciolate" },
-    { key: "miele",             name: "Miele di fiori" },
-    { key: "crema_proteica",    name: "Crema proteica (Gonuts)" },
-  ]},
-  { title: "🧃 Bevande", keys: [
-    { key: "spremuta",          name: "Spremuta / succo frutta s.z.a." },
-    { key: "mandorla",          name: "Bevanda alla mandorla (Alpro)" },
-  ]},
-  { title: "💊 Farmacia / Integratori base", keys: [
-    { key: "supradyn",          name: "Supradyn effervescente" },
-    { key: "frutta_disidratata",name: "Frutta disidratata al naturale" },
-  ]},
-];
-
-// ─── STATE ───────────────────────────────────────────────────────────────────
-let mode = 'giorno';
-let currentDay = 'A';
-let scorteView = 'check'; // 'check' | 'mancanti'
-
-let checked   = {A:{}, B:{}, C:{}, '3g':{}};
-let stockHave = {};   // groupKey -> true se ce l'ho
-let storico   = [];
-
-try { checked   = JSON.parse(localStorage.getItem('spesa_checked3') || '{"A":{},"B":{},"C":{},"3g":{}}'); if (!checked['3g']) checked['3g'] = {}; } catch(e) {}
-try { stockHave = JSON.parse(localStorage.getItem('spesa_stock')    || '{}'); } catch(e) {}
-try { storico   = JSON.parse(localStorage.getItem('spesa_storico')  || '[]'); } catch(e) {}
-
-function save() {
-  localStorage.setItem('spesa_checked3', JSON.stringify(checked));
-  localStorage.setItem('spesa_stock',    JSON.stringify(stockHave));
-  localStorage.setItem('spesa_storico',  JSON.stringify(storico));
-}
-
-// ─── AGGREGAZIONE 3 GIORNI ───────────────────────────────────────────────────
-function build3Days() {
-  const map = {};
-  const order = [];
-  ['A','B','C'].forEach(d => {
-    days[d].forEach(sec => {
-      sec.items.forEach(item => {
-        const gk = item.groupKey;
-        if (!map[gk]) { map[gk] = { name: item.name, totalQty: 0, unit: item.unit, alts: new Set(), days: [] }; order.push(gk); }
-        if (!isNaN(item.qty) && item.unit !== 'qb') map[gk].totalQty += item.qty;
-        map[gk].days.push(d);
-        if (item.alt) map[gk].alts.add(item.alt);
-      });
-    });
-  });
-  const cats = {
-    'Frutta e verdura fresca': ['banana','frutto','carote','frutta_disidratata'],
-    'Verdure cotte': ['verdure_cotte'],
-    'Carne': ['carne_pollo','carne_vitello','bresaola'],
-    'Pesce': ['pesce_fresco','tonno'],
-    'Latticini e uova': ['yogurt_greco','feta','maionese','uova','albume'],
-    'Carboidrati': ['gnocchi','cereali','pasta_integrale','pane_panpiuma','pane_integrale','pane_segale','crostini','cracker','biscotti','paninetti','avena','patate'],
-    'Condimenti': ['olio_evo','philadelphia','olive','miele','crema_proteica'],
-    'Bevande': ['spremuta','mandorla'],
-    'Altro': [],
-  };
-  const mapped = new Set(Object.values(cats).flat());
-  order.forEach(gk => { if (!mapped.has(gk)) cats['Altro'].push(gk); });
-  const sections = [];
-  Object.entries(cats).forEach(([catName, keys]) => {
-    const items = keys.filter(gk => map[gk]).map(gk => ({ gk, ...map[gk] }));
-    if (items.length) sections.push({ title: catName, items });
-  });
-  return sections;
-}
-
-function fmtQty(item) {
-  if (item.unit === 'qb') return 'q.b.';
-  return item.qty + ' ' + item.unit;
-}
-function fmtTotalQty(entry) {
-  if (entry.unit === 'qb') return 'q.b.';
-  return entry.totalQty + ' ' + entry.unit;
-}
-
-// ─── UI HELPERS ──────────────────────────────────────────────────────────────
-function setMode(m) {
-  mode = m;
-  scorteView = 'check';
-  document.querySelectorAll('.top-tab').forEach((t,i) => t.classList.toggle('active', ['giorno','3giorni','scorte'][i] === m));
-  document.getElementById('day-selector').style.display = m === 'giorno' ? 'flex' : 'none';
-  render();
-}
-
-function setDay(d) {
-  currentDay = d;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['A','B','C'][i] === d));
-  render();
-}
-
-function checkKey(si, ii) {
-  return mode === '3giorni' ? ('3g_' + si + '_' + ii) : (currentDay + '_' + si + '_' + ii);
-}
-
-function toggleItem(si, ii) {
-  const k = checkKey(si, ii);
-  const bucket = mode === '3giorni' ? '3g' : currentDay;
-  checked[bucket][k] = !checked[bucket][k];
-  save(); render();
-}
-
-function resetCurrent() {
-  if (mode === 'scorte') {
-    if (!confirm('Azzerare tutte le scorte?')) return;
-    stockHave = {}; save(); render(); return;
-  }
-  const label = mode === '3giorni' ? 'lista 3 giorni' : 'Giorno ' + currentDay;
-  if (!confirm('Azzerare le spunte della ' + label + '?')) return;
-  if (mode === '3giorni') checked['3g'] = {};
-  else checked[currentDay] = {};
-  save(); render();
-}
-
-function toggleStock(key) {
-  stockHave[key] = !stockHave[key];
-  save(); render();
-}
-
-function showMancanti() { scorteView = 'mancanti'; render(); }
-function showScorteCheck() { scorteView = 'check'; render(); }
-
-// ─── RENDER ──────────────────────────────────────────────────────────────────
-function render() {
-  const c = document.getElementById('main-container');
-
-  if (mode === 'scorte') {
-    renderScorte(c); return;
-  }
-
-  let sections, bucketKey;
-  if (mode === 'giorno') {
-    sections = days[currentDay].map(sec => ({
-      title: sec.title,
-      items: sec.items.map(item => ({
-        displayName: item.name, displayQty: fmtQty(item),
-        alt: item.alt || null, isMulti: false,
-      }))
-    }));
-    bucketKey = currentDay;
-  } else {
-    const raw = build3Days();
-    sections = raw.map(sec => ({
-      title: sec.title,
-      items: sec.items.map(entry => ({
-        displayName: entry.name, displayQty: fmtTotalQty(entry),
-        alt: entry.alts.size ? [...entry.alts].join(' / ') : null,
-        isMulti: new Set(entry.days).size > 1,
-        dayLabels: [...new Set(entry.days)].join('+'),
-      }))
-    }));
-    bucketKey = '3g';
-  }
-
-  let total = 0, done = 0, html = '';
-  if (mode === '3giorni') html += '<div class="info-banner">Quantità totali per A+B+C. Le cifre in arancione coprono più giorni.</div>';
-
-  html += '<div class="progress-card"><div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div><span class="progress-label" id="prog-text">0 / 0</span><button class="reset-link" onclick="resetCurrent()">Azzera</button></div>';
-
-  sections.forEach((sec, si) => {
-    const sd = sec.items.filter((_,ii) => checked[bucketKey][checkKey(si,ii)]).length;
-    html += '<div class="section"><div class="section-header"><span class="section-title">' + sec.title + '</span><span class="section-count">' + sd + '/' + sec.items.length + '</span></div>';
-    sec.items.forEach((item, ii) => {
-      const k = checkKey(si, ii);
-      const isDone = !!checked[bucketKey][k];
-      total++; if (isDone) done++;
-      html += '<div class="item-row" onclick="toggleItem(' + si + ',' + ii + ')">';
-      html += '<div class="check' + (isDone?' done':'') + '"><div class="checkmark"></div></div>';
-      html += '<div class="item-content">';
-      html += '<div class="item-name' + (isDone?' done':'') + '">' + item.displayName + '</div>';
-      if (item.alt) html += '<div class="item-alt">' + item.alt + '</div>';
-      if (mode === '3giorni' && item.isMulti) html += '<div class="days-badge">giorno ' + item.dayLabels + '</div>';
-      html += '</div>';
-      html += '<span class="qty' + (item.isMulti?' multi':'') + '">' + item.displayQty + '</span>';
-      html += '</div>';
-    });
-    html += '</div>';
-  });
-
-  c.innerHTML = html;
-  const pct = total ? Math.round(done/total*100) : 0;
-  document.getElementById('prog-fill').style.width = pct + '%';
-  document.getElementById('prog-text').textContent = done + ' / ' + total;
-}
-
-function renderScorte(c) {
-  if (scorteView === 'mancanti') { renderMancanti(c); return; }
-
-  const haveCount = Object.values(stockHave).filter(Boolean).length;
-  const total = SCORTE_CATS.reduce((a, cat) => a + cat.keys.length, 0);
-  const missing = total - haveCount;
-
-  let html = '';
-
-  html += '<div class="progress-card"><div class="progress-track"><div class="progress-fill amber" id="prog-fill" style="width:' + Math.round(haveCount/total*100) + '%"></div></div><span class="progress-label" id="prog-text">' + haveCount + ' / ' + total + ' in casa</span><button class="reset-link" onclick="resetCurrent()">Azzera</button></div>';
-
-  html += '<div class="scorte-legend"><span><span class="legend-dot dot-amber"></span>Ho già</span><span><span class="legend-dot" style="background:var(--border2)"></span>Da comprare</span></div>';
-
-  html += '<div class="scorte-actions">';
-  html += '<button class="action-btn" onclick="toggleAllStock()">Seleziona tutto</button>';
-  html += '<button class="action-btn primary" onclick="showMancanti()">🛒 Vedi lista mancanti (' + missing + ')</button>';
-  html += '</div>';
-
-  SCORTE_CATS.forEach(cat => {
-    html += '<div class="section"><div class="section-header"><span class="section-title">' + cat.title + '</span><span class="section-count">' + cat.keys.filter(k => stockHave[k.key]).length + '/' + cat.keys.length + '</span></div>';
-    cat.keys.forEach(k => {
-      const have = !!stockHave[k.key];
-      html += '<div class="item-row' + (have?' has-stock':'') + '" onclick="toggleStock(\'' + k.key + '\')">';
-      html += '<div class="check' + (have?' stock':'') + '"><div class="checkmark"></div></div>';
-      html += '<div class="item-content"><div class="item-name">' + k.name + '</div></div>';
-      if (have) html += '<span class="qty" style="background:var(--amber-bg);color:var(--amber)">✓ Ho già</span>';
-      html += '</div>';
-    });
-    html += '</div>';
-  });
-
-  c.innerHTML = html;
-}
-
-function renderMancanti(c) {
-  const missing = [];
-  SCORTE_CATS.forEach(cat => {
-    const items = cat.keys.filter(k => !stockHave[k.key]);
-    if (items.length) missing.push({ title: cat.title, items });
-  });
-
-  let html = '';
-  html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">';
-  html += '<div><div style="font-size:16px;font-weight:600">Lista mancanti</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Cose da comprare</div></div>';
-  html += '<button class="back-btn" onclick="showScorteCheck()">← Scorte</button>';
-  html += '</div>';
-
-  if (!missing.length || missing.every(m => !m.items.length)) {
-    html += '<div class="empty-state"><div class="big">🎉</div>Hai tutto in casa!<br>Nessun prodotto mancante.</div>';
-    c.innerHTML = html; return;
-  }
-
-  // Progress spunta lista mancanti
-  const allMissing = missing.flatMap(m => m.items);
-  const total = allMissing.length;
-  const done = allMissing.filter(k => checked['mancanti_' + k.key]).length;
-
-  html += '<div class="progress-card"><div class="progress-track"><div class="progress-fill" style="width:' + Math.round(done/total*100) + '%"></div></div><span class="progress-label">' + done + ' / ' + total + '</span><button class="reset-link" onclick="resetMancanti()">Azzera</button></div>';
-
-  missing.forEach(cat => {
-    html += '<div class="section"><div class="section-header"><span class="section-title">' + cat.title + '</span><span class="section-count">' + cat.items.length + '</span></div>';
-    cat.items.forEach(k => {
-      const isDone = !!checked['mancanti_' + k.key];
-      html += '<div class="item-row" onclick="toggleMancante(\'' + k.key + '\')">';
-      html += '<div class="check' + (isDone?' done':'') + '"><div class="checkmark"></div></div>';
-      html += '<div class="item-content"><div class="item-name' + (isDone?' done':'') + '">' + k.name + '</div></div>';
-      if (isDone) html += '<span class="qty" style="background:var(--green-bg);color:var(--green-text)">✓</span>';
-      html += '</div>';
-    });
-    html += '</div>';
-  });
-
-  c.innerHTML = html;
-}
-
-function toggleMancante(key) {
-  const k = 'mancanti_' + key;
-  checked[k] = !checked[k];
-  // Se spunto come comprato, aggiorno anche le scorte
-  if (checked[k]) stockHave[key] = true;
-  save(); renderMancanti(document.getElementById('main-container'));
-}
-
-function resetMancanti() {
-  const allMissing = SCORTE_CATS.flatMap(cat => cat.keys.filter(k => !stockHave[k.key]));
-  allMissing.forEach(k => { delete checked['mancanti_' + k.key]; });
-  save(); renderMancanti(document.getElementById('main-container'));
-}
-
-let allSelected = false;
-function toggleAllStock() {
-  const allKeys = SCORTE_CATS.flatMap(cat => cat.keys.map(k => k.key));
-  allSelected = !allSelected;
-  allKeys.forEach(k => { stockHave[k] = allSelected; });
-  save(); render();
-}
-
-// ─── MODAL SPESA ─────────────────────────────────────────────────────────────
-function openModal() {
-  document.getElementById('modal').classList.add('open');
-  document.getElementById('spesa-input').value = '';
-  renderStorico();
-}
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
-function closeModalOutside(e) { if (e.target === document.getElementById('modal')) closeModal(); }
-
-function saveSpesa() {
-  const val = parseFloat(document.getElementById('spesa-input').value);
-  if (!val || val <= 0) { alert('Inserisci un importo valido'); return; }
-  const dateStr = new Date().toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'});
-  const label = mode === '3giorni' ? 'A+B+C' : mode === 'scorte' ? 'Scorte' : 'Giorno ' + currentDay;
-  storico.unshift({ day: label, date: dateStr, amount: val });
-  save();
-  document.getElementById('spesa-input').value = '';
-  renderStorico();
-}
-function deleteSpesa(i) { storico.splice(i,1); save(); renderStorico(); }
-
-function renderStorico() {
-  const list = document.getElementById('storico-list');
-  const totWrap = document.getElementById('totale-wrap');
-  if (!storico.length) {
-    list.innerHTML = '<li class="empty-storico">Nessuna spesa registrata</li>';
-    totWrap.style.display = 'none'; return;
-  }
-  list.innerHTML = storico.map((s,i) =>
-    '<li class="storico-item">' +
-      '<div class="storico-meta"><span class="storico-day">' + s.day + '</span><span class="storico-date">' + s.date + '</span></div>' +
-      '<span class="storico-amount">€ ' + s.amount.toFixed(2) + '</span>' +
-      '<button class="storico-del" onclick="deleteSpesa(' + i + ')">×</button>' +
-    '</li>'
-  ).join('');
-  const tot = storico.reduce((a,s) => a+s.amount, 0);
-  document.getElementById('totale-value').textContent = '€ ' + tot.toFixed(2);
-  totWrap.style.display = 'flex';
-}
-
-render();
-</script>
+  <div class="toast" id="toast" role="status">Movimento salvato</div>
+  <script src="app.js"></script>
 </body>
 </html>
